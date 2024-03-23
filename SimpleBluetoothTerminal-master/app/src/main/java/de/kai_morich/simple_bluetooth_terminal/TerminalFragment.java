@@ -5,6 +5,7 @@ import android.app.Activity;
 import android.app.AlertDialog;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
+import android.bluetooth.BluetoothSocket;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
@@ -23,6 +24,7 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -44,12 +46,21 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
     private TextView sendText;
     private TextUtil.HexWatcher hexWatcher;
 
+
+
     private Connected connected = Connected.False;
     private boolean initialStart = true;
     private boolean hexEnabled = false;
     private boolean pendingNewline = false;
     private String newline = TextUtil.newline_crlf;
 
+
+
+    public static BluetoothSocket bluetoothSocket; // from PP
+
+
+    Button onePlayer;
+    Button twoPlayer;
     /*
      * Lifecycle
      */
@@ -140,7 +151,25 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
 
         View sendBtn = view.findViewById(R.id.send_btn);
         sendBtn.setOnClickListener(v -> send(sendText.getText().toString()));
+
+
+        onePlayer = view.findViewById(R.id.oneplayer);
+        twoPlayer = view.findViewById(R.id.twoplayer);
+
+        onePlayer.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                String binary = "0000000";
+                send(binary);
+            }
+        });
+
         return view;
+    }
+
+    public void LightActivity(View view){
+        Intent intent = new Intent(getActivity(), OnePlayer.class);
+        startActivity(intent);
     }
 
     @Override
@@ -269,6 +298,14 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
                 }
                 spn.append(TextUtil.toCaretString(msg, newline.length() != 0));
             }
+//            try {
+//                // Code that might cause an exception
+//                int len = service.read(); // This will cause an ArithmeticException
+//            } catch (IOException e) {
+//                // Code to handle the exception
+//                System.out.println("An arithmetic exception occurred: " + e.getMessage());
+//            }
+
         }
         receiveText.append(spn);
     }

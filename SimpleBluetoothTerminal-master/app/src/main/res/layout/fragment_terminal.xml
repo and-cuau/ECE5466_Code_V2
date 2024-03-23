@@ -15,7 +15,25 @@
         android:gravity="bottom"
         android:scrollbars="vertical"
         android:textAppearance="@style/TextAppearance.AppCompat.Medium" />
-
+        <Button
+            android:id="@+id/oneplayer"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="One player" />
+    <!-- Button 2 -->
+        <Button
+            android:id="@+id/twoplayer"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Two players"
+            android:layout_marginTop="16dp"/>
+    <!-- Button 3 -->
+        <Button
+            android:id="@+id/extra"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Settings"
+            android:layout_marginTop="16dp"/>
     <View
         android:layout_width="match_parent"
         android:background="?android:attr/listDivider"

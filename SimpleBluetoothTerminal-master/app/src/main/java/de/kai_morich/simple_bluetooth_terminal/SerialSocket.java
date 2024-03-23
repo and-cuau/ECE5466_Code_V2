@@ -78,6 +78,15 @@ class SerialSocket implements Runnable {
         socket.getOutputStream().write(data);
     }
 
+    int read() throws IOException {
+        if (!connected)
+            throw new IOException("not connected");
+        byte[] buffer = new byte[1024];
+        int len = socket.getInputStream().read(buffer);
+        return len;
+    }
+
+
     @Override
     public void run() { // connect & read
         try {

@@ -85,6 +85,7 @@ public class SerialService extends Service implements SerialListener {
         socket.connect(this);
         this.socket = socket;
         connected = true;
+
     }
 
     public void disconnect() {
@@ -101,6 +102,14 @@ public class SerialService extends Service implements SerialListener {
             throw new IOException("not connected");
         socket.write(data);
     }
+
+    public int read() throws IOException {
+        if(!connected)
+            throw new IOException("not connected");
+        int len = socket.read();
+        return len;
+    }
+
 
     public void attach(SerialListener listener) {
         if(Looper.getMainLooper().getThread() != Thread.currentThread())

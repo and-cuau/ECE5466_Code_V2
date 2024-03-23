@@ -59,6 +59,8 @@ public class DevicesFragment extends ListFragment {
         requestBluetoothPermissionLauncherForRefresh = registerForActivityResult(
                 new ActivityResultContracts.RequestPermission(),
                 granted -> BluetoothUtil.onPermissionsResult(this, granted, this::refresh));
+
+
     }
 
     @Override
