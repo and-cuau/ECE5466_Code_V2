@@ -34,6 +34,7 @@ import androidx.fragment.app.Fragment;
 
 import java.util.ArrayDeque;
 import java.util.Arrays;
+import android.util.Log;
 
 public class TerminalFragment extends Fragment implements ServiceConnection, SerialListener {
 
@@ -54,7 +55,7 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
     private boolean pendingNewline = false;
     private String newline = TextUtil.newline_crlf;
 
-
+    private String test;
 
     public static BluetoothSocket bluetoothSocket; // from PP
 
@@ -70,6 +71,8 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
         setHasOptionsMenu(true);
         setRetainInstance(true);
         deviceAddress = getArguments().getString("device");
+        Log.d("Receive test", "Test passed");
+
     }
 
     @Override
@@ -168,8 +171,7 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
     }
 
     public void LightActivity(View view){
-        Intent intent = new Intent(getActivity(), OnePlayer.class);
-        startActivity(intent);
+
     }
 
     @Override
@@ -276,11 +278,17 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
 
     private void receive(ArrayDeque<byte[]> datas) {
         SpannableStringBuilder spn = new SpannableStringBuilder();
+        Log.d("Receive test", "Test passed");
         for (byte[] data : datas) {
             if (hexEnabled) {
                 spn.append(TextUtil.toHexString(data)).append('\n');
             } else {
                 String msg = new String(data);
+                if (msg.equals("1")) {
+                    Log.d("Receive test", "'1' received");
+                    Intent intent = new Intent(getActivity(), GameOver.class);
+                    startActivity(intent);
+                }
                 if (newline.equals(TextUtil.newline_crlf) && msg.length() > 0) {
                     // don't show CR as ^M if directly before LF
                     msg = msg.replace(TextUtil.newline_crlf, TextUtil.newline_lf);
