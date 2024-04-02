@@ -57,8 +57,11 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
 
     private String test;
 
-    public static BluetoothSocket bluetoothSocket; // from PP
+    public static BluetoothSocket bluetoothSocket;
 
+//    stuff i added recently
+//    public static BluetoothSocket bluetoothSocket;
+//    private static final String deviceAddress = "70:CE:8C:EA:9E:22";
 
     Button onePlayer;
     Button twoPlayer;
@@ -128,6 +131,8 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
         if(initialStart && isResumed()) {
             initialStart = false;
             getActivity().runOnUiThread(this::connect);
+            Intent intent = new Intent(getActivity(), GameOver.class);
+            startActivity(intent);
         }
     }
 
@@ -162,8 +167,8 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
         onePlayer.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                String binary = "0000000";
-                send(binary);
+                String start = "1";
+                send(start);
             }
         });
 
@@ -286,8 +291,15 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
                 String msg = new String(data);
                 if (msg.equals("1")) {
                     Log.d("Receive test", "'1' received");
-                    Intent intent = new Intent(getActivity(), GameOver.class);
-                    startActivity(intent);
+                    getActivity().runOnUiThread(new Runnable() {
+                        @Override
+                        public void run () {
+
+                            Intent intent = new Intent(getActivity(), GameOver.class);
+                            startActivity(intent);
+                        }
+
+                    });
                 }
                 if (newline.equals(TextUtil.newline_crlf) && msg.length() > 0) {
                     // don't show CR as ^M if directly before LF

@@ -19,6 +19,8 @@ public class BluetoothUtil {
         void call();
     }
 
+
+
     /**
      * sort by name, then address. sort named devices first
      */

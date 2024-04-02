@@ -2,12 +2,18 @@ package de.kai_morich.simple_bluetooth_terminal;
 
 import android.animation.ObjectAnimator;
 import android.app.Activity;
+import android.bluetooth.BluetoothSocket;
+import android.content.ComponentName;
 import android.content.Intent;
+import android.content.ServiceConnection;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.os.Bundle;
+import android.os.IBinder;
+import android.text.Editable;
+import android.text.SpannableStringBuilder;
 import android.view.View;
 import android.widget.RadioButton;
 import android.util.Log;
@@ -15,8 +21,12 @@ import android.animation.AnimatorListenerAdapter;
 import android.widget.TextView;
 import android.animation.Animator;
 
+import java.util.ArrayDeque;
+
 public class OnePlayer extends Activity implements SensorEventListener {
     private SensorManager sensorManager;
+
+
 
     RadioButton radioButton1;
     RadioButton radioButton2;
@@ -25,6 +35,11 @@ public class OnePlayer extends Activity implements SensorEventListener {
     RadioButton radioButton5;
     RadioButton radioButton6;
     RadioButton radioButton7;
+
+    // public static BluetoothSocket bluetoothSocket;
+
+
+    // OnePlayer.bluetoothSocket = btServer.createInsecureRfcommSocketToServiceRecord();
 
 
 
@@ -58,8 +73,6 @@ public class OnePlayer extends Activity implements SensorEventListener {
         fadeIn.start();
 
 
-
-
     }
 
     @Override
@@ -73,18 +86,18 @@ public class OnePlayer extends Activity implements SensorEventListener {
     protected void onResume() {
         super.onResume();
         // setContentView(R.layout.activity_acceleration);
-        sensorManager.registerListener(this,sensorManager.getDefaultSensor(Sensor.TYPE_LIGHT),SensorManager.SENSOR_DELAY_NORMAL);
+        sensorManager.registerListener(this, sensorManager.getDefaultSensor(Sensor.TYPE_LIGHT), SensorManager.SENSOR_DELAY_NORMAL);
         int misses = 0;
         while (misses < 2) {
             //if ( recieve() = TRUE) {
             // misses++;
-        //}
+            //}
         }
 
 
     }
 
-    public void LightActivity(View view){
+    public void LightActivity(View view) {
         Intent intent = new Intent(this, GameOver.class);
         startActivity(intent);
     }
@@ -94,10 +107,14 @@ public class OnePlayer extends Activity implements SensorEventListener {
     public void onAccuracyChanged(Sensor sensor, int accuracy) {
 
     }
+
     @Override
-    public void onPause(){
+    public void onPause() {
         super.onPause();
         sensorManager.unregisterListener(this);
     }
 
+    /*
+     * SerialListener
+     */
 }

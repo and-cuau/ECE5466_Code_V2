@@ -31,168 +31,363 @@ import java.util.ArrayDeque;
 
 
 
+import android.Manifest;
+import android.app.Activity;
+import android.app.AlertDialog;
+import android.bluetooth.BluetoothAdapter;
+import android.bluetooth.BluetoothDevice;
+import android.bluetooth.BluetoothSocket;
+import android.content.ComponentName;
+import android.content.Context;
+import android.content.Intent;
+import android.content.ServiceConnection;
+import android.os.Build;
+import android.os.Bundle;
+import android.os.IBinder;
+import android.text.Editable;
+import android.text.Spannable;
+import android.text.SpannableStringBuilder;
+import android.text.method.ScrollingMovementMethod;
+import android.text.style.ForegroundColorSpan;
+import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.Button;
+import android.widget.TextView;
+import android.widget.Toast;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.fragment.app.Fragment;
 
+import java.util.ArrayDeque;
+import java.util.Arrays;
+import android.util.Log;
 
-
-
-public class TwoPlayer extends Activity implements SensorEventListener, SerialListener, ServiceConnection {
-    private SensorManager sensorManager;
-
-    RadioButton radioButton1;
-    RadioButton radioButton2;
-    RadioButton radioButton3;
-    RadioButton radioButton4;
-    RadioButton radioButton5;
-    RadioButton radioButton6;
-    RadioButton radioButton7;
-    private boolean hexEnabled = false;
-    private boolean pendingNewline = false;
-    private String newline = TextUtil.newline_crlf;
-    private TextView receiveText;
+public class TwoPlayer extends Fragment implements ServiceConnection, SerialListener {
 
     private enum Connected { False, Pending, True }
 
-    private TwoPlayer.Connected connected = TwoPlayer.Connected.False;
-
+    private String deviceAddress;
     private SerialService service;
 
+    private TextView receiveText;
+    private TextView sendText;
+    private TextUtil.HexWatcher hexWatcher;
+
+
+
+    private Connected connected = Connected.False;
     private boolean initialStart = true;
+    private boolean hexEnabled = false;
+    private boolean pendingNewline = false;
+    private String newline = TextUtil.newline_crlf;
 
-    protected void onCreate(Bundle savedInstanceState) {
+    private String test;
+
+    public static BluetoothSocket bluetoothSocket; // from PP
+
+
+    Button b1;
+    Button b2;
+    Button b3;
+    Button b4;
+    Button b5;
+    Button b6;
+    Button b7;
+    Button b8;
+    /*
+     * Lifecycle
+     */
+    @Override
+    public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.player_two);
-        sensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
+        setHasOptionsMenu(true);
+        setRetainInstance(true);
+        deviceAddress = getArguments().getString("device");
+        Log.d("Receive test", "Test passed");
 
-        TextView myLabel = findViewById(R.id.whack);
-        myLabel.setText("Updated Label Text");
-        myLabel.setTextColor(getResources().getColor(android.R.color.holo_red_dark));
+    }
 
-        // Create a fade-in animation
-        ObjectAnimator fadeIn = ObjectAnimator.ofFloat(myLabel, "alpha", 0f, 1f);
-        fadeIn.setDuration(1000); // 1000 milliseconds or 1 second
+    @Override
+    public void onDestroy() {
+        if (connected != Connected.False)
+            disconnect();
+        getActivity().stopService(new Intent(getActivity(), SerialService.class));
+        super.onDestroy();
+    }
 
-        // Create a fade-out animation
-        ObjectAnimator fadeOut = ObjectAnimator.ofFloat(myLabel, "alpha", 1f, 0f);
-        fadeOut.setDuration(1000); // 1000 milliseconds or 1 second
+    @Override
+    public void onStart() {
+        super.onStart();
+        if(service != null)
+            service.attach(this);
+        else
+            getActivity().startService(new Intent(getActivity(), SerialService.class)); // prevents service destroy on unbind from recreated activity caused by orientation change
+    }
 
-        // Chain the animations for a fade-in, stay visible, and then fade-out effect
-        fadeIn.addListener(new AnimatorListenerAdapter() {
-            public void onAnimationEnd(Animator animation) {
-                super.onAnimationEnd(animation);
-                fadeOut.start();
+    @Override
+    public void onStop() {
+        if(service != null && !getActivity().isChangingConfigurations())
+            service.detach();
+        super.onStop();
+    }
+
+    @SuppressWarnings("deprecation") // onAttach(context) was added with API 23. onAttach(activity) works for all API versions
+    @Override
+    public void onAttach(@NonNull Activity activity) {
+        super.onAttach(activity);
+        getActivity().bindService(new Intent(getActivity(), SerialService.class), this, Context.BIND_AUTO_CREATE);
+    }
+
+    @Override
+    public void onDetach() {
+        try { getActivity().unbindService(this); } catch(Exception ignored) {}
+        super.onDetach();
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        if(initialStart && service != null) {
+            initialStart = false;
+            getActivity().runOnUiThread(this::connect);
+        }
+    }
+
+    @Override
+    public void onServiceConnected(ComponentName name, IBinder binder) {
+        service = ((SerialService.SerialBinder) binder).getService();
+        service.attach(this);
+        if(initialStart && isResumed()) {
+            initialStart = false;
+            getActivity().runOnUiThread(this::connect);
+        }
+    }
+
+    @Override
+    public void onServiceDisconnected(ComponentName name) {
+        service = null;
+    }
+
+    /*
+     * UI
+     */
+    @Override
+    public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+        View view = inflater.inflate(R.layout.player_two, container, false);
+        receiveText = view.findViewById(R.id.receive_text);                          // TextView performance decreases with number of spans
+        receiveText.setTextColor(getResources().getColor(R.color.colorRecieveText)); // set as default color to reduce number of spans
+        receiveText.setMovementMethod(ScrollingMovementMethod.getInstance());
+
+        sendText = view.findViewById(R.id.send_text);
+        hexWatcher = new TextUtil.HexWatcher(sendText);
+        hexWatcher.enable(hexEnabled);
+        sendText.addTextChangedListener(hexWatcher);
+        sendText.setHint(hexEnabled ? "HEX mode" : "");
+
+        View sendBtn = view.findViewById(R.id.send_btn);
+        sendBtn.setOnClickListener(v -> send(sendText.getText().toString()));
+
+
+        b1 = view.findViewById(R.id.b1);
+        b2 = view.findViewById(R.id.b2);
+        b3 = view.findViewById(R.id.b3);
+        b4 = view.findViewById(R.id.b4);
+        b5 = view.findViewById(R.id.b5);
+        b6 = view.findViewById(R.id.b6);
+        b7 = view.findViewById(R.id.b7);
+        b8 = view.findViewById(R.id.b8);
+
+        b1.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                String binary = "1";
+                send(binary);
+            }
+        });
+        b2.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                String binary = "2";
+                send(binary);
+            }
+        });
+        b3.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                String binary = "3";
+                send(binary);
+            }
+        });
+        b4.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                String binary = "4";
+                send(binary);
+            }
+        });
+        b5.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                String binary = "5";
+                send(binary);
+            }
+        });
+        b6.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                String binary = "6";
+                send(binary);
+            }
+        });
+        b7.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                String binary = "7";
+                send(binary);
+            }
+        });
+        b8.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                String binary = "8";
+                send(binary);
             }
         });
 
-        // Start the fade-in animation
-        fadeIn.start();
-
-
-
-
-    }
-
-    @Override
-    public void onSensorChanged(SensorEvent event) {
-        if (event.sensor.getType() != Sensor.TYPE_LIGHT) {
-            return;
-        }
-    }
-
-    @Override
-    protected void onResume() {
-        super.onResume();
-        // setContentView(R.layout.activity_acceleration);
-        sensorManager.registerListener(this,sensorManager.getDefaultSensor(Sensor.TYPE_LIGHT),SensorManager.SENSOR_DELAY_NORMAL);
-        int misses = 0;
-        while (misses < 2) {
-            //if ( recieve() = TRUE) {
-            // misses++;
-            //}
-        }
-
-
+        return view;
     }
 
     public void LightActivity(View view){
-        Intent intent = new Intent(this, GameOver.class);
-        startActivity(intent);
-    }
 
+    }
 
     @Override
-    public void onAccuracyChanged(Sensor sensor, int accuracy) {
-
-    }
-    @Override
-    public void onPause(){
-        super.onPause();
-        sensorManager.unregisterListener(this);
+    public void onCreateOptionsMenu(@NonNull Menu menu, MenuInflater inflater) {
+        inflater.inflate(R.menu.menu_terminal, menu);
     }
 
-    private void status(String str) {
-        SpannableStringBuilder spn = new SpannableStringBuilder(str + '\n');
-        spn.setSpan(new ForegroundColorSpan(getResources().getColor(R.color.colorStatusText)), 0, spn.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
-        receiveText.append(spn);
+    public void onPrepareOptionsMenu(@NonNull Menu menu) {
+        menu.findItem(R.id.hex).setChecked(hexEnabled);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            menu.findItem(R.id.backgroundNotification).setChecked(service != null && service.areNotificationsEnabled());
+        } else {
+            menu.findItem(R.id.backgroundNotification).setChecked(true);
+            menu.findItem(R.id.backgroundNotification).setEnabled(false);
+        }
     }
-
-//    private void connect() {
-//        try {
-//            BluetoothAdapter bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
-//            BluetoothDevice device = bluetoothAdapter.getRemoteDevice(deviceAddress);
-//            status("connecting...");
-//            connected = TerminalFragment.Connected.Pending;
-//            SerialSocket socket = new SerialSocket(getActivity().getApplicationContext(), device);
-//            service.connect(socket);
-//        } catch (Exception e) {
-//            onSerialConnectError(e);
-//        }
-//    }
-
-
 
     @Override
-    public void onSerialConnect() {
-        status("connected");
-        connected = TwoPlayer.Connected.True;
+    public boolean onOptionsItemSelected(MenuItem item) {
+        int id = item.getItemId();
+        if (id == R.id.clear) {
+            receiveText.setText("");
+            return true;
+        } else if (id == R.id.newline) {
+            String[] newlineNames = getResources().getStringArray(R.array.newline_names);
+            String[] newlineValues = getResources().getStringArray(R.array.newline_values);
+            int pos = java.util.Arrays.asList(newlineValues).indexOf(newline);
+            AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
+            builder.setTitle("Newline");
+            builder.setSingleChoiceItems(newlineNames, pos, (dialog, item1) -> {
+                newline = newlineValues[item1];
+                dialog.dismiss();
+            });
+            builder.create().show();
+            return true;
+        } else if (id == R.id.hex) {
+            hexEnabled = !hexEnabled;
+            sendText.setText("");
+            hexWatcher.enable(hexEnabled);
+            sendText.setHint(hexEnabled ? "HEX mode" : "");
+            item.setChecked(hexEnabled);
+            return true;
+        } else if (id == R.id.backgroundNotification) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                if (!service.areNotificationsEnabled() && Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                    requestPermissions(new String[]{Manifest.permission.POST_NOTIFICATIONS}, 0);
+                } else {
+                    showNotificationSettings();
+                }
+            }
+            return true;
+        } else {
+            return super.onOptionsItemSelected(item);
+        }
     }
 
-    public void onSerialConnectError(Exception e) {
-        status("connection failed: " + e.getMessage());
-        disconnect();
+    /*
+     * Serial + UI
+     */
+    private void connect() {
+        try {
+            BluetoothAdapter bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
+            BluetoothDevice device = bluetoothAdapter.getRemoteDevice(deviceAddress);
+            status("connecting...");
+            connected = Connected.Pending;
+            SerialSocket socket = new SerialSocket(getActivity().getApplicationContext(), device);
+            service.connect(socket);
+        } catch (Exception e) {
+            onSerialConnectError(e);
+        }
     }
+
     private void disconnect() {
-        connected = TwoPlayer.Connected.False;
+        connected = Connected.False;
         service.disconnect();
     }
 
-
-    @Override
-    public void onSerialRead(byte[] data) {
-        ArrayDeque<byte[]> datas = new ArrayDeque<>();
-        datas.add(data);
-        receive(datas);
+    private void send(String str) {
+        if(connected != Connected.True) {
+            Toast.makeText(getActivity(), "not connected", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        try {
+            String msg;
+            byte[] data;
+            if(hexEnabled) {
+                StringBuilder sb = new StringBuilder();
+                TextUtil.toHexString(sb, TextUtil.fromHexString(str));
+                TextUtil.toHexString(sb, newline.getBytes());
+                msg = sb.toString();
+                data = TextUtil.fromHexString(msg);
+            } else {
+                msg = str;
+                data = (str + newline).getBytes();
+            }
+            SpannableStringBuilder spn = new SpannableStringBuilder(msg + '\n');
+            spn.setSpan(new ForegroundColorSpan(getResources().getColor(R.color.colorSendText)), 0, spn.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+            receiveText.append(spn);
+            service.write(data);
+        } catch (Exception e) {
+            onSerialIoError(e);
+        }
     }
 
-
-    @Override
-    public void onSerialIoError(Exception e) {
-        status("connection lost: " + e.getMessage());
-        disconnect();
-    }
-
-    public void onSerialRead(ArrayDeque<byte[]> datas) {
-        receive(datas);
-    }
-
-    private String receive(ArrayDeque<byte[]> datas) {
+    private void receive(ArrayDeque<byte[]> datas) {
         SpannableStringBuilder spn = new SpannableStringBuilder();
-        String msg = "";
+        Log.d("Receive test", "Test passed");
         for (byte[] data : datas) {
             if (hexEnabled) {
                 spn.append(TextUtil.toHexString(data)).append('\n');
             } else {
-                msg = new String(data);
+                String msg = new String(data);
+                if (msg.equals("1")) {
+                    Log.d("Receive test", "'1' received");
+                    getActivity().runOnUiThread(new Runnable() {
+                        @Override
+                        public void run () {
+
+                            Intent intent = new Intent(getActivity(), GameOver.class);
+                            startActivity(intent);
+                        }
+
+                    });
+                }
                 if (newline.equals(TextUtil.newline_crlf) && msg.length() > 0) {
                     // don't show CR as ^M if directly before LF
                     msg = msg.replace(TextUtil.newline_crlf, TextUtil.newline_lf);
@@ -210,27 +405,74 @@ public class TwoPlayer extends Activity implements SensorEventListener, SerialLi
                 }
                 spn.append(TextUtil.toCaretString(msg, newline.length() != 0));
             }
-
+//            try {
+//                // Code that might cause an exception
+//                int len = service.read(); // This will cause an ArithmeticException
+//            } catch (IOException e) {
+//                // Code to handle the exception
+//                System.out.println("An arithmetic exception occurred: " + e.getMessage());
+//            }
 
         }
         receiveText.append(spn);
-        return msg;
+    }
+
+    private void status(String str) {
+        SpannableStringBuilder spn = new SpannableStringBuilder(str + '\n');
+        spn.setSpan(new ForegroundColorSpan(getResources().getColor(R.color.colorStatusText)), 0, spn.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+        receiveText.append(spn);
+    }
+
+    /*
+     * starting with Android 14, notifications are not shown in notification bar by default when App is in background
+     */
+
+    private void showNotificationSettings() {
+        Intent intent = new Intent();
+        intent.setAction("android.settings.APP_NOTIFICATION_SETTINGS");
+        intent.putExtra("android.provider.extra.APP_PACKAGE", getActivity().getPackageName());
+        startActivity(intent);
     }
 
     @Override
-    public void onServiceConnected(ComponentName name, IBinder binder) {
-        service = ((SerialService.SerialBinder) binder).getService();
-        service.attach(this);
-//        if(initialStart && isResumed()) {
-//            initialStart = false;
-//            getActivity().runOnUiThread(this::connect);
-//        }
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        if(Arrays.equals(permissions, new String[]{Manifest.permission.POST_NOTIFICATIONS}) &&
+                Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && !service.areNotificationsEnabled())
+            showNotificationSettings();
+    }
+
+    /*
+     * SerialListener
+     */
+    @Override
+    public void onSerialConnect() {
+        status("connected");
+        connected = Connected.True;
     }
 
     @Override
-    public void onServiceDisconnected(ComponentName name) {
-        service = null;
+    public void onSerialConnectError(Exception e) {
+        status("connection failed: " + e.getMessage());
+        disconnect();
+    }
+
+    @Override
+    public void onSerialRead(byte[] data) {
+        ArrayDeque<byte[]> datas = new ArrayDeque<>();
+        datas.add(data);
+        receive(datas);
+    }
+
+    public void onSerialRead(ArrayDeque<byte[]> datas) {
+        receive(datas);
+    }
+
+    @Override
+    public void onSerialIoError(Exception e) {
+        status("connection lost: " + e.getMessage());
+        disconnect();
     }
 
 }
+
 

@@ -1,5 +1,6 @@
 package de.kai_morich.simple_bluetooth_terminal;
 
+import android.bluetooth.BluetoothSocket;
 import android.os.Bundle;
 import androidx.fragment.app.FragmentManager;
 import androidx.appcompat.app.AppCompatActivity;
