@@ -5,6 +5,7 @@ import android.app.Activity;
 import android.app.AlertDialog;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
+import android.bluetooth.BluetoothServerSocket;
 import android.bluetooth.BluetoothSocket;
 import android.content.ComponentName;
 import android.content.Context;
@@ -56,12 +57,18 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
     private String newline = TextUtil.newline_crlf;
 
     private String test;
+    BluetoothServerSocket btServer;
 
-    public static BluetoothSocket bluetoothSocket;
+    // MainActivity instance = new MainActivity();
+
+    //instance.bluetoothSocket = btServer.createInsecureRfcommSocketToServiceRecord();
+
+    // BluetoothSocket socket = MainActivity.bluetoothSocket;
+
+    // socket = btServer.createInsecureRfcommSocketToServiceRecord();
 
 //    stuff i added recently
-//    public static BluetoothSocket bluetoothSocket;
-//    private static final String deviceAddress = "70:CE:8C:EA:9E:22";
+//
 
     Button onePlayer;
     Button twoPlayer;
@@ -74,7 +81,7 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
         setHasOptionsMenu(true);
         setRetainInstance(true);
         deviceAddress = getArguments().getString("device");
-        Log.d("Receive test", "Test passed");
+        Log.d("Oncreate test", "Test passed");
 
     }
 
@@ -167,7 +174,15 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
         onePlayer.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                String start = "1";
+                String start = "o";
+                send(start);
+            }
+        });
+
+        twoPlayer.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                String start = "t";
                 send(start);
             }
         });
@@ -283,7 +298,7 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
 
     private void receive(ArrayDeque<byte[]> datas) {
         SpannableStringBuilder spn = new SpannableStringBuilder();
-        Log.d("Receive test", "Test passed");
+        Log.d("Receive test", "data received");
         for (byte[] data : datas) {
             if (hexEnabled) {
                 spn.append(TextUtil.toHexString(data)).append('\n');

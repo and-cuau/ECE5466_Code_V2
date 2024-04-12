@@ -15,6 +15,9 @@ import android.os.IBinder;
 import android.text.Editable;
 import android.text.SpannableStringBuilder;
 import android.view.View;
+import android.view.animation.Animation;
+import android.view.animation.AnimationUtils;
+import android.widget.ImageView;
 import android.widget.RadioButton;
 import android.util.Log;
 import android.animation.AnimatorListenerAdapter;
@@ -25,7 +28,7 @@ import java.util.ArrayDeque;
 
 public class OnePlayer extends Activity implements SensorEventListener {
     private SensorManager sensorManager;
-
+    ImageView img;
 
 
     RadioButton radioButton1;
@@ -48,6 +51,11 @@ public class OnePlayer extends Activity implements SensorEventListener {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.player_one);
         sensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
+
+        img = findViewById(R.id.heart1);
+
+        Animation animation = AnimationUtils.loadAnimation(getApplicationContext(), R.anim.blink);
+        img.startAnimation(animation);
 
         TextView myLabel = findViewById(R.id.whack);
         myLabel.setText("Updated Label Text");

@@ -8,6 +8,8 @@ import androidx.appcompat.widget.Toolbar;
 
 public class MainActivity extends AppCompatActivity implements FragmentManager.OnBackStackChangedListener {
 
+    public static BluetoothSocket bluetoothSocket;
+    private static final String deviceAddress = "70:CE:8C:EA:9E:22";
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
