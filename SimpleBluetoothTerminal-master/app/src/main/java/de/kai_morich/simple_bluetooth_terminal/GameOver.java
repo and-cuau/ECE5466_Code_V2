@@ -32,10 +32,10 @@ public class GameOver extends Activity implements SensorEventListener {
 
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.player_one);
+        setContentView(R.layout.over_game);
         sensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
 
-        TextView myLabel = findViewById(R.id.whack);
+        TextView myLabel = findViewById(R.id.gameover);
         myLabel.setText("Updated Label Text");
         myLabel.setTextColor(getResources().getColor(android.R.color.holo_red_dark));
 

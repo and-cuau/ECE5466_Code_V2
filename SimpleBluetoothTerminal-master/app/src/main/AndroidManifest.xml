@@ -27,6 +27,26 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        <activity
+            android:name=".GameOver"
+            android:windowSoftInputMode="stateHidden|adjustResize"
+            android:exported="true">
+        </activity>
+
+        <activity
+            android:name=".TwoPlayer"
+            android:windowSoftInputMode="stateHidden|adjustResize"
+            android:exported="true">
+        </activity>
+
+        <activity
+            android:name=".OnePlayer"
+            android:windowSoftInputMode="stateHidden|adjustResize"
+            android:exported="true">
+        </activity>
+
+
+
         <service
             android:name=".SerialService"
             android:foregroundServiceType="remoteMessaging|connectedDevice" />
