@@ -22,10 +22,6 @@
         android:textStyle="bold"
         android:alpha="1.0"
         android:textColor="#FFFFFF"
-        android:shadowColor="#000000"
-        android:shadowDx="0"
-        android:shadowDy="0"
-        android:shadowRadius="20"
         android:layout_centerHorizontal="true"
         android:layout_marginTop="40dp"/>
 

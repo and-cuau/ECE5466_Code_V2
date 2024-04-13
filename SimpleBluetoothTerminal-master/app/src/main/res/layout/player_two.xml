@@ -1,23 +1,37 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    android:background="@drawable/grass"
+    >
 
     <TextView
         android:id="@+id/whack"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Holy mole-y!"
-        android:textSize="36dp"
+        android:textSize="44dp"
+        android:textStyle="bold"
+        android:alpha="1.0"
+        android:textColor="#FFFFFF"
+
         android:layout_centerHorizontal="true"
         android:layout_marginTop="200dp"/>
+
+    <ImageView
+        android:id="@+id/mole"
+        android:layout_width="191dp"
+        android:layout_height="181dp"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="-20dp"
+        android:src="@drawable/mole_png5" />
 
     <ImageView
         android:id="@+id/heart1"
         android:layout_width="40dp"
         android:layout_height="40dp"
         android:src="@drawable/pixelheart"
-        android:layout_marginStart="200dp"
+        android:layout_marginStart="160dp"
         android:layout_marginTop="300dp"/>
 
     <ImageView
@@ -37,6 +51,21 @@
         android:layout_marginTop="450dp"/>
 
 
+    <Button
+        android:id="@+id/b1p"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="1 player"
+        android:layout_marginStart="10dp"
+        android:layout_marginTop="10dp"/>
+
+    <Button
+        android:id="@+id/b2p"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="2 players"
+        android:layout_marginStart="10dp"
+        android:layout_marginTop="55dp"/>
 
     <Button
         android:id="@+id/b1"

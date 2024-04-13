@@ -48,7 +48,7 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
     private TextView sendText;
     private TextUtil.HexWatcher hexWatcher;
 
-
+    private static TerminalFragment tfInstance = null;
 
     private Connected connected = Connected.False;
     private boolean initialStart = true;
@@ -63,9 +63,10 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
 
     //instance.bluetoothSocket = btServer.createInsecureRfcommSocketToServiceRecord();
 
-    // BluetoothSocket socket = MainActivity.bluetoothSocket;
 
-    // socket = btServer.createInsecureRfcommSocketToServiceRecord();
+
+     BluetoothSocket socket = MainActivity.bluetoothSocket;
+
 
 //    stuff i added recently
 //
@@ -81,7 +82,7 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
         setHasOptionsMenu(true);
         setRetainInstance(true);
         deviceAddress = getArguments().getString("device");
-        Log.d("Oncreate test", "Test passed");
+        Log.d("failure test", "Oncreate passed");
 
     }
 
@@ -96,14 +97,20 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
     @Override
     public void onStart() {
         super.onStart();
+        Log.d("failure test", "Onstart passed");
+        tfInstance = this;
         if(service != null)
             service.attach(this);
         else
             getActivity().startService(new Intent(getActivity(), SerialService.class)); // prevents service destroy on unbind from recreated activity caused by orientation change
     }
 
+    public static TerminalFragment getInstance(){
+        return tfInstance;
+    }
     @Override
     public void onStop() {
+        Log.d("failure test", "stop passed");
         if(service != null && !getActivity().isChangingConfigurations())
             service.detach();
         super.onStop();
@@ -112,12 +119,14 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
     @SuppressWarnings("deprecation") // onAttach(context) was added with API 23. onAttach(activity) works for all API versions
     @Override
     public void onAttach(@NonNull Activity activity) {
+        Log.d("failure test", "attach passed");
         super.onAttach(activity);
         getActivity().bindService(new Intent(getActivity(), SerialService.class), this, Context.BIND_AUTO_CREATE);
     }
 
     @Override
     public void onDetach() {
+        Log.d("failure test", "detach passed");
         try { getActivity().unbindService(this); } catch(Exception ignored) {}
         super.onDetach();
     }
@@ -125,6 +134,7 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
     @Override
     public void onResume() {
         super.onResume();
+        Log.d("failure test", "resume passed");
         if(initialStart && service != null) {
             initialStart = false;
             getActivity().runOnUiThread(this::connect);
@@ -133,6 +143,7 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
 
     @Override
     public void onServiceConnected(ComponentName name, IBinder binder) {
+        Log.d("failure test", "service connected passed");
         service = ((SerialService.SerialBinder) binder).getService();
         service.attach(this);
         if(initialStart && isResumed()) {
@@ -200,6 +211,7 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
     }
 
     public void onPrepareOptionsMenu(@NonNull Menu menu) {
+        Log.d("failure test", "prepare options");
         menu.findItem(R.id.hex).setChecked(hexEnabled);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             menu.findItem(R.id.backgroundNotification).setChecked(service != null && service.areNotificationsEnabled());
@@ -211,6 +223,7 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
+        Log.d("failure test", "options selected passed");
         int id = item.getItemId();
         if (id == R.id.clear) {
             receiveText.setText("");
@@ -252,6 +265,7 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
      * Serial + UI
      */
     private void connect() {
+        Log.d("failure test", "connect passed");
         try {
             BluetoothAdapter bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
             BluetoothDevice device = bluetoothAdapter.getRemoteDevice(deviceAddress);
@@ -265,11 +279,13 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
     }
 
     private void disconnect() {
+        Log.d("failure test", "disconnect passed");
         connected = Connected.False;
         service.disconnect();
     }
 
     private void send(String str) {
+        Log.d("failure test", "send passed");
         if(connected != Connected.True) {
             Toast.makeText(getActivity(), "not connected", Toast.LENGTH_SHORT).show();
             return;
@@ -298,7 +314,7 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
 
     private void receive(ArrayDeque<byte[]> datas) {
         SpannableStringBuilder spn = new SpannableStringBuilder();
-        Log.d("Receive test", "data received");
+        Log.d("failure test", "receive passed");
         for (byte[] data : datas) {
             if (hexEnabled) {
                 spn.append(TextUtil.toHexString(data)).append('\n');
@@ -346,6 +362,8 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
     }
 
     private void status(String str) {
+        Log.d("failure test", "status passed");
+
         SpannableStringBuilder spn = new SpannableStringBuilder(str + '\n');
         spn.setSpan(new ForegroundColorSpan(getResources().getColor(R.color.colorStatusText)), 0, spn.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
         receiveText.append(spn);
@@ -356,6 +374,7 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
      */
 
     private void showNotificationSettings() {
+        Log.d("failure test", "show noti passed");
         Intent intent = new Intent();
         intent.setAction("android.settings.APP_NOTIFICATION_SETTINGS");
         intent.putExtra("android.provider.extra.APP_PACKAGE", getActivity().getPackageName());
@@ -364,6 +383,7 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
 
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        Log.d("failure test", "request permissions passed");
         if(Arrays.equals(permissions, new String[]{Manifest.permission.POST_NOTIFICATIONS}) &&
                 Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && !service.areNotificationsEnabled())
             showNotificationSettings();
@@ -374,29 +394,35 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
      */
     @Override
     public void onSerialConnect() {
+        Log.d("failure test", "serial connect passed");
         status("connected");
         connected = Connected.True;
     }
 
     @Override
     public void onSerialConnectError(Exception e) {
+        Log.d("failure test", "connect error passed");
         status("connection failed: " + e.getMessage());
         disconnect();
     }
 
     @Override
     public void onSerialRead(byte[] data) {
+        Log.d("failure test", "serial read passed");
         ArrayDeque<byte[]> datas = new ArrayDeque<>();
         datas.add(data);
         receive(datas);
     }
 
     public void onSerialRead(ArrayDeque<byte[]> datas) {
+        Log.d("failure test", "serial read passed");
+
         receive(datas);
     }
 
     @Override
     public void onSerialIoError(Exception e) {
+        Log.d("failure test", "serial err passed");
         status("connection lost: " + e.getMessage());
         disconnect();
     }
