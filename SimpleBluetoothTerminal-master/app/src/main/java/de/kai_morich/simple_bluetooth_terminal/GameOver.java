@@ -39,21 +39,7 @@ public class GameOver extends Activity implements SensorEventListener {
         myLabel.setText("Updated Label Text");
         myLabel.setTextColor(getResources().getColor(android.R.color.holo_red_dark));
 
-        // Create a fade-in animation
-        ObjectAnimator fadeIn = ObjectAnimator.ofFloat(myLabel, "alpha", 0f, 1f);
-        fadeIn.setDuration(1000); // 1000 milliseconds or 1 second
-
-        // Create a fade-out animation
-        ObjectAnimator fadeOut = ObjectAnimator.ofFloat(myLabel, "alpha", 1f, 0f);
-        fadeOut.setDuration(1000); // 1000 milliseconds or 1 second
-
-        // Chain the animations for a fade-in, stay visible, and then fade-out effect
-        fadeIn.addListener(new AnimatorListenerAdapter() {
-            public void onAnimationEnd(Animator animation) {
-                super.onAnimationEnd(animation);
-                fadeOut.start();
-            }
-        });
+        
 
         // Start the fade-in animation
         fadeIn.start();
@@ -86,7 +72,7 @@ public class GameOver extends Activity implements SensorEventListener {
     }
 
 
-
+    
     @Override
     public void onAccuracyChanged(Sensor sensor, int accuracy) {
 
