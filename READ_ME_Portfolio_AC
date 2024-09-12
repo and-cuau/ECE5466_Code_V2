@@ -1,12 +1,12 @@
-Contribution to Whac-A-Mole ECE 4566 Project
+I contributed to Whac-A-Mole ECE 4566 Project the following features:
  
-In ECE5466_Code/SimpleBluetoothTerminal-master_from_scratch/app/src/main/java/de/kai_morich/simple_bluetooth_terminal wrote
+In ECE5466_Code/SimpleBluetoothTerminal-master_from_scratch/app/src/main/java/de/kai_morich/simple_bluetooth_terminal I programmed: 
 
 receiving and handling of "game over" and points received from ESP32 Arduino program.
 
 handling and sending information from button presses, one player button press and two player button press.
 
 
-In SimpleBluetoothTerminal-master_from_scratch/app/src/main/res/layout/fragment_terminal.xml wrote 
+In SimpleBluetoothTerminal-master_from_scratch/app/src/main/res/layout/fragment_terminal.xml I programmed 
 
 One player button, two player button, buttons 1-8, mole image UI elements.
