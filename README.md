@@ -3,7 +3,7 @@ To run the code, you will need an android phone, and two ESP-32 microcontrollers
 First, connect one of the ESP-32 board to Arduino IDE. 
 In Arduino IDE, open up the file located in the "ESP_Game_Logic" subfolder of this folder called "5466SerialToBT.ino" and load it onto the ESP-32.
 
-Now, disconnec the first ESP-32, and connect the second ESP-32.
+Now, disconnect the first ESP-32, and connect the second ESP-32.
 Open up the file named "NerfCode.ino" and upload the code to the ESP-32.
 
 The instructions for wiring the various componenets are located in the report.
